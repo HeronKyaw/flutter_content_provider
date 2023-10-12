@@ -9,32 +9,20 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 
+/**
+ * This is a custom Content Provider that allows reading and saving integer preferences.
+ */
 class CountContentProvider : ContentProvider() {
+    private lateinit var prefs: SharedPreferences
 
     companion object {
         private val TAG = ContentProvider::class.java.simpleName
         const val SAVED_PREFERENCES = "savedPreferences"
     }
 
-    private lateinit var prefs: SharedPreferences
-
-    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
-        TODO("Implement this to handle requests to delete one or more rows")
-    }
-
-    override fun getType(uri: Uri): String? {
-        TODO(
-            "Implement this to handle requests for the MIME type of the data" +
-                    "at the given URI"
-        )
-    }
-
-    override fun insert(uri: Uri, values: ContentValues?): Uri? {
-        TODO("Implement this to handle requests to insert a new row.")
-    }
-
     override fun onCreate(): Boolean {
         return if (context != null) {
+            // Initialize SharedPreferences for this Content Provider.
             prefs = context!!.getSharedPreferences(SAVED_PREFERENCES, Context.MODE_PRIVATE)
             true
         } else {
@@ -43,26 +31,11 @@ class CountContentProvider : ContentProvider() {
         }
     }
 
-    override fun query(
-        uri: Uri, projection: Array<String>?, selection: String?,
-        selectionArgs: Array<String>?, sortOrder: String?
-    ): Cursor? {
-        TODO("Implement this to handle query requests from clients.")
-    }
-
-    override fun update(
-        uri: Uri, values: ContentValues?, selection: String?,
-        selectionArgs: Array<String>?
-    ): Int {
-        TODO("Implement this to handle requests to update one or more rows.")
-    }
-
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle {
         val bundle = Bundle()
         Log.d(TAG, "call: {$method}")
         when (method) {
             MyPreferences.GET_INT_PREFERENCE_METHOD -> {
-                Log.d(TAG, "get")
                 val int: Int = getIntPreference()
                 Log.d(TAG, "getInt ContentProvider: {$int}")
                 bundle.putInt(MyPreferences.SAVED_INT_KEY, int)
@@ -71,15 +44,15 @@ class CountContentProvider : ContentProvider() {
                 Log.d(TAG, "save")
                 savePreferences(arg?.toInt() ?: 0)
             }
-            MyPreferences.READ_PREFERENCE_METHOD -> {
-                Log.d(TAG, "read")
-                readPreferences()
-            }
         }
-
         return bundle
     }
 
+    /**
+     * Get an integer preference value from SharedPreferences.
+     *
+     * @return The integer value read from SharedPreferences. If not found, it defaults to 0.
+     */
     private fun getIntPreference(): Int {
         return prefs.getInt(
             MyPreferences.SAVED_INT_KEY,
@@ -87,6 +60,11 @@ class CountContentProvider : ContentProvider() {
         )
     }
 
+    /**
+     * Save an integer preference value to SharedPreferences.
+     *
+     * @param int The integer value to be saved.
+     */
     private fun savePreferences(int: Int) {
         with(prefs.edit()) {
             putInt(
@@ -97,11 +75,32 @@ class CountContentProvider : ContentProvider() {
         }
     }
 
-    private fun readPreferences() {
-        val intPreference = prefs.getInt(
-            MyPreferences.SAVED_INT_KEY,
-            0
-        )
-        Log.d(TAG, "int: {$intPreference}")
+    /**
+     * The following methods are not implemented.
+     */
+    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
+        throw NotImplementedError("delete is not implemented")
+    }
+
+    override fun getType(uri: Uri): String? {
+        throw NotImplementedError("getType is not implemented")
+    }
+
+    override fun insert(uri: Uri, values: ContentValues?): Uri? {
+        throw NotImplementedError("insert is not implemented")
+    }
+
+    override fun query(
+        uri: Uri, projection: Array<String>?, selection: String?,
+        selectionArgs: Array<String>?, sortOrder: String?
+    ): Cursor? {
+        throw NotImplementedError("query is not implemented")
+    }
+
+    override fun update(
+        uri: Uri, values: ContentValues?, selection: String?,
+        selectionArgs: Array<String>?
+    ): Int {
+        throw NotImplementedError("update is not implemented")
     }
 }
