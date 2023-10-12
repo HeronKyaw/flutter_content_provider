@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.content_provider">
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+<!--    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />-->
+<!--    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />-->
+    <uses-permission android:name="com.example.content_provider.permission.PROVIDER" />
+
+    <permission
+        android:name="com.example.content_provider.permission.PROVIDER"
+        android:protectionLevel="normal" />
     <application
         android:label="content_provider"
         android:name="${applicationName}"
@@ -33,7 +38,8 @@
             android:value="2" />
         <provider
             android:name=".CountContentProvider"
-            android:authorities="com.example.content_provider.count"
+            android:authorities="com.example.content_provider.provider"
+            android:permission="com.example.content_provider.permission.PROVIDER"
             android:exported="true"
             android:grantUriPermissions="true">
         </provider>

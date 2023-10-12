@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   String _previousCount = "0";
-  static const channel = MethodChannel('com.example.content_provider/CountContentProvider');
+  static const channel = MethodChannel('com.example.content_provider.CountContentProvider');
 
   void _incrementCounter() {
     setState(() {
@@ -49,7 +49,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> getDataFromAnotherPackage() async {
-    _previousCount = await channel.invokeMethod('getCount', 'count') ?? '0';
+    _previousCount = await channel.invokeMethod('getCount') ?? '0';
+    setState(() {});
   }
 
   Future<void> setData(int count) async {

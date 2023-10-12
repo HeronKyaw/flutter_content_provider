@@ -2,58 +2,63 @@ package com.example.content_provider
 
 import android.content.ContentValues
 import android.database.Cursor
+import android.net.Uri
+import android.os.Build
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity: FlutterActivity() {
-    private lateinit var countContentProvider: CountContentProvider
+    private val prefs by lazy {
+        MySharedPreference(this)
+    }
+
+    companion object {
+        val uri: Uri = Uri.parse(MyPreferences.URI)
+        const val auth = MyPreferences.AUTHORITY
+    }
+
+    private fun writeData(int : Int) {
+        val cr = contentResolver
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            cr.call(auth, MyPreferences.SAVE_PREFERENCE_METHOD, int.toString(), null)
+            cr.call(auth, MyPreferences.READ_PREFERENCE_METHOD, int.toString(), null)
+        } else {
+            cr.call(uri, MyPreferences.SAVE_PREFERENCE_METHOD, int.toString(), null)
+            cr.call(uri, MyPreferences.READ_PREFERENCE_METHOD, int.toString(), null)
+        }
+    }
+
+    private fun readData(): Int? {
+        val cr = contentResolver
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            cr.call(auth, MyPreferences.READ_PREFERENCE_METHOD, null, null)
+            val bundle = cr.call(auth, MyPreferences.GET_INT_PREFERENCE_METHOD, null, null)
+            bundle?.getInt(MyPreferences.SAVED_INT_KEY)
+        } else {
+            cr.call(uri, MyPreferences.READ_PREFERENCE_METHOD, null, null)
+            val bundle = cr.call(uri, MyPreferences.GET_INT_PREFERENCE_METHOD, null, null)
+            bundle?.getInt(MyPreferences.SAVED_INT_KEY)
+        }
+    }
+
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        countContentProvider = CountContentProvider()
-
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.content_provider/CountContentProvider").setMethodCallHandler { call, result ->
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.content_provider.CountContentProvider").setMethodCallHandler { call, result ->
             when (call.method) {
                 "getCount" -> {
-                    val key = call.arguments as? String
-                    if (key != null) {
-                        var cursor: Cursor? = null
-                        try {
-                            cursor = countContentProvider.query(
-                                CountContentProvider.CONTENT_URI,
-                                null,
-                                key,
-                                null,
-                                null
-                            )
-
-                            if (cursor != null && cursor.moveToFirst()) {
-                                val columnIndex = cursor.getColumnIndex(key)
-                                result.success(cursor.getString(columnIndex))
-                            } else {
-                                result.success(null)
-                            }
-                        } catch (e: Exception) {
-                            result.error(e.message ?: "", e.message ?: "", null)
-                        } finally {
-                            cursor?.close()
-                        }
-                    } else {
-                        // Handle the case where key is null
-                        result.error("Key is null", "Key cannot be null", null)
-                    }
+                    result.success(readData().toString())
                 }
                 "setCount" -> {
                     try {
-                        val values = ContentValues()
                         val arguments = call.arguments as Map<String, String>
                         arguments.keys.forEach {
-                            values.put(it, arguments[it])
+                            prefs.savePreferences(arguments[it]?.toInt() ?: 0)
+                            writeData(arguments[it]?.toInt() ?: 0)
                         }
-
-                        countContentProvider.insert(CountContentProvider.CONTENT_URI, values)
+                        prefs.readPreferences()
                         result.success(null)
                     } catch (e: Exception) {
                         result.error(e.message ?: "", e.message ?: "", null)
